@@ -5,8 +5,83 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DirectorySize"
         mc:Ignorable="d"
-        Title="Directory Size" Height="450" Width="800">
-    <Grid>
-        
+        Title="Analyseur de taille de dossiers" Height="600" Width="1000">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Zone de saisie du chemin -->
+        <TextBlock Grid.Row="0" Text="Chemin du dossier :" Margin="0,0,0,5"/>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="FolderPathTextBox" Grid.Column="0" Margin="0,0,10,0" VerticalContentAlignment="Center"/>
+            <Button x:Name="BrowseButton" Grid.Column="1" Content="Parcourir..." Padding="10,2" Click="BrowseButton_Click"/>
+        </Grid>
+
+        <!-- Bouton d'analyse -->
+        <Button x:Name="AnalyzeButton" Grid.Row="2" Content="Analyser" 
+                HorizontalAlignment="Center" VerticalAlignment="Top" 
+                Margin="0,10,0,0" Padding="20,5" FontWeight="Bold"
+                Click="AnalyzeButton_Click"/>
+
+        <!-- Zone de résultats -->
+        <GroupBox Grid.Row="3" Header="Résultats" Margin="0,10,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- En-têtes de colonnes -->
+                <Grid Grid.Row="0" Margin="0,0,0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Dossier" FontWeight="Bold"/>
+                    <TextBlock Grid.Column="1" Text="Taille" FontWeight="Bold" TextAlignment="Right"/>
+                    <TextBlock Grid.Column="2" Text="Nb Fichiers" FontWeight="Bold" TextAlignment="Right"/>
+                </Grid>
+                
+                <!-- Liste des dossiers -->
+                <ListView x:Name="ResultsListView" Grid.Row="1" BorderThickness="0">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Dossier" DisplayMemberBinding="{Binding Path=Name}" Width="Auto"/>
+                            <GridViewColumn Header="Taille" DisplayMemberBinding="{Binding Path=Size, StringFormat={}{0:N0} octets}" Width="150">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=Size, StringFormat={}{0:N0} octets}" TextAlignment="Right"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Nb Fichiers" DisplayMemberBinding="{Binding Path=FileCount, StringFormat={}{0:N0}}" Width="150">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=FileCount, StringFormat={}{0:N0}}" TextAlignment="Right"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+        </GroupBox>
+
+        <!-- Barre de statut -->
+        <StatusBar Grid.Row="4" VerticalAlignment="Bottom">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusTextBlock" Text="Prêt"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>
