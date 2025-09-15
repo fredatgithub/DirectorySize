@@ -21,10 +21,57 @@ namespace DirectorySize
     {
       InitializeComponent();
       InitializeBackgroundWorker();
+      
+      // Restaurer la position et la taille de la fenêtre
+      if (settings.WindowLeft >= 0 && settings.WindowTop >= 0 && 
+          settings.WindowWidth > 0 && settings.WindowHeight > 0)
+      {
+        Left = settings.WindowLeft;
+        Top = settings.WindowTop;
+        Width = settings.WindowWidth;
+        Height = settings.WindowHeight;
+        
+        if (settings.WindowState == WindowState.Maximized)
+        {
+          // Pour éviter le clignotement, on commence en mode normal puis on maximise
+          WindowState = WindowState.Normal;
+          Loaded += (s, e) => WindowState = WindowState.Maximized;
+        }
+        else
+        {
+          WindowState = settings.WindowState;
+        }
+      }
+      
       LoadLastDirectory();
       
       // Initialiser la référence à la barre de progression
       progressBar = (Border)FindName("ProgressBar");
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+      base.OnClosing(e);
+      
+      // Sauvegarder la position et la taille de la fenêtre
+      if (WindowState == WindowState.Normal)
+      {
+        settings.WindowLeft = Left;
+        settings.WindowTop = Top;
+        settings.WindowWidth = Width;
+        settings.WindowHeight = Height;
+      }
+      else
+      {
+        // Si la fenêtre est maximisée ou minimisée, on sauvegarde la position et taille restaurées
+        settings.WindowLeft = RestoreBounds.Left;
+        settings.WindowTop = RestoreBounds.Top;
+        settings.WindowWidth = RestoreBounds.Width;
+        settings.WindowHeight = RestoreBounds.Height;
+      }
+      
+      settings.WindowState = WindowState;
+      settings.Save();
     }
 
     private void LoadLastDirectory()
