@@ -98,9 +98,11 @@ namespace DirectorySize
         return;
       }
 
+      // Préparer l'interface pour l'analyse
       ResultsListView.ItemsSource = null;
       StatusTextBlock.Text = "Analyse en cours...";
       AnalyzeButton.Content = "Annuler";
+      AnalyzeButton.Visibility = Visibility.Visible;
       
       worker.RunWorkerAsync(argument: path);
     }
@@ -184,9 +186,9 @@ namespace DirectorySize
 
     private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
     {
-        // Réinitialiser la barre de progression
         Dispatcher.Invoke(() =>
         {
+            // Réinitialiser la barre de progression
             if (progressBar != null)
             {
                 progressBar.Width = 0;
@@ -217,9 +219,10 @@ namespace DirectorySize
                 }
             }
 
-            // Réactiver le bouton
+            // Toujours réactiver le bouton et le rendre visible
             AnalyzeButton.Content = "Analyser";
             AnalyzeButton.IsEnabled = true;
+            AnalyzeButton.Visibility = Visibility.Visible;
         });
     }
 
