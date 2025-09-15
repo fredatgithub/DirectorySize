@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Forms;
 using DirectorySize.Properties;
 
@@ -13,12 +15,16 @@ namespace DirectorySize
   {
     private BackgroundWorker worker;
     private Settings settings = Settings.Default;
+    private Border progressBar;
 
     public MainWindow()
     {
       InitializeComponent();
       InitializeBackgroundWorker();
       LoadLastDirectory();
+      
+      // Initialiser la référence à la barre de progression
+      progressBar = (Border)FindName("ProgressBar");
     }
 
     private void LoadLastDirectory()
@@ -144,49 +150,77 @@ namespace DirectorySize
       e.Result = results.OrderByDescending(d => d.Size).ToList();
     }
 
+    private void UpdateProgress(int percentage, string currentDirectory = null)
+    {
+        if (progressBar == null) return;
+
+        // Mettre à jour la largeur de la barre de progression
+        Dispatcher.Invoke(() =>
+        {
+            // Calculer la largeur en fonction du pourcentage
+            double maxWidth = StatusBarGrid.ActualWidth;
+            double newWidth = (maxWidth * percentage) / 100.0;
+            progressBar.Width = newWidth;
+
+            // Mettre à jour l'opacité (plus clair au début, plus foncé à la fin)
+            double opacity = 0.2 + (0.8 * (percentage / 100.0));
+            progressBar.Opacity = opacity;
+
+            // Mettre à jour le texte
+            string statusText = $"Analyse en cours... {percentage}%";
+            if (!string.IsNullOrEmpty(currentDirectory))
+            {
+                statusText += $" - {System.IO.Path.GetFileName(currentDirectory)}";
+            }
+            StatusTextBlock.Text = statusText;
+        });
+    }
+
     private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
     {
-      var dirInfo = e.UserState as DirectoryInfoWithSize;
-      if (dirInfo != null)
-      {
-        StatusTextBlock.Text = $"Analyse en cours... {e.ProgressPercentage}% - {dirInfo.Name}";
-      }
-      else
-      {
-        StatusTextBlock.Text = $"Analyse en cours... {e.ProgressPercentage}%";
-      }
+        var dirInfo = e.UserState as DirectoryInfoWithSize;
+        UpdateProgress(e.ProgressPercentage, dirInfo?.FullPath);
     }
 
     private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
     {
-      if (e.Cancelled)
-      {
-        StatusTextBlock.Text = "Analyse annulée par l'utilisateur.";
-      }
-      else if (e.Error != null)
-      {
-        StatusTextBlock.Text = $"Erreur : {e.Error.Message}";
-        System.Windows.MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur", 
-            MessageBoxButton.OK, MessageBoxImage.Error);
-      }
-      else
-      {
-        var results = e.Result as List<DirectoryInfoWithSize>;
-        if (results != null && results.Any())
+        // Réinitialiser la barre de progression
+        Dispatcher.Invoke(() =>
         {
-          ResultsListView.ItemsSource = results;
-          long totalSize = results.Sum(d => d.Size);
-          StatusTextBlock.Text = $"Analyse terminée - {results.Count} dossiers analysés - Taille totale : {FormatSize(totalSize)}";
-        }
-        else
-        {
-          StatusTextBlock.Text = "Aucun dossier trouvé ou accessible.";
-        }
-      }
+            if (progressBar != null)
+            {
+                progressBar.Width = 0;
+            }
 
-      // Toujours réactiver le bouton et le mettre à jour
-      AnalyzeButton.Content = "Analyser";
-      AnalyzeButton.IsEnabled = true;
+            if (e.Cancelled)
+            {
+                StatusTextBlock.Text = "Analyse annulée par l'utilisateur.";
+            }
+            else if (e.Error != null)
+            {
+                StatusTextBlock.Text = $"Erreur : {e.Error.Message}";
+                System.Windows.MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                var results = e.Result as List<DirectoryInfoWithSize>;
+                if (results != null && results.Any())
+                {
+                    ResultsListView.ItemsSource = results;
+                    long totalSize = results.Sum(d => d.Size);
+                    StatusTextBlock.Text = $"Analyse terminée - {results.Count} dossiers analysés - Taille totale : {FormatSize(totalSize)}";
+                }
+                else
+                {
+                    StatusTextBlock.Text = "Aucun dossier trouvé ou accessible.";
+                }
+            }
+
+            // Réactiver le bouton
+            AnalyzeButton.Content = "Analyser";
+            AnalyzeButton.IsEnabled = true;
+        });
     }
 
     private static string FormatSize(long bytes)

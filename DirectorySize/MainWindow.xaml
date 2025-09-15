@@ -78,9 +78,21 @@
         </GroupBox>
 
         <!-- Barre de statut -->
-        <StatusBar Grid.Row="4" VerticalAlignment="Bottom">
-            <StatusBarItem>
-                <TextBlock x:Name="StatusTextBlock" Text="Prêt"/>
+        <StatusBar x:Name="MainStatusBar" Grid.Row="4" VerticalAlignment="Bottom" Height="24">
+            <StatusBarItem HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Width="Auto">
+                <Grid x:Name="StatusBarGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="StatusTextBlock" Text="Prêt" Padding="5,2" VerticalAlignment="Center" Grid.Column="0"/>
+                    <Border x:Name="ProgressBar" 
+                            HorizontalAlignment="Left" 
+                            Width="0" 
+                            Background="#9900CC00"
+                            Opacity="0.3"
+                            VerticalAlignment="Stretch"
+                            Grid.Column="0"/>
+                </Grid>
             </StatusBarItem>
         </StatusBar>
     </Grid>
