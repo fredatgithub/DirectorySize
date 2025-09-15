@@ -136,7 +136,7 @@ namespace DirectorySize
       else if (e.Error != null)
       {
         StatusTextBlock.Text = $"Erreur : {e.Error.Message}";
-        System.Windows.MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur",
+        System.Windows.MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur", 
             MessageBoxButton.OK, MessageBoxImage.Error);
       }
       else
@@ -154,6 +154,7 @@ namespace DirectorySize
         }
       }
 
+      // Toujours réactiver le bouton et le mettre à jour
       AnalyzeButton.Content = "Analyser";
       AnalyzeButton.IsEnabled = true;
     }
