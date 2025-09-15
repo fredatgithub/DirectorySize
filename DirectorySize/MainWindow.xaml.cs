@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Forms;
 using DirectorySize.Properties;
 
@@ -21,16 +20,16 @@ namespace DirectorySize
     {
       InitializeComponent();
       InitializeBackgroundWorker();
-      
+
       // Restaurer la position et la taille de la fenêtre
-      if (settings.WindowLeft >= 0 && settings.WindowTop >= 0 && 
+      if (settings.WindowLeft >= 0 && settings.WindowTop >= 0 &&
           settings.WindowWidth > 0 && settings.WindowHeight > 0)
       {
         Left = settings.WindowLeft;
         Top = settings.WindowTop;
         Width = settings.WindowWidth;
         Height = settings.WindowHeight;
-        
+
         if (settings.WindowState == WindowState.Maximized)
         {
           // Pour éviter le clignotement, on commence en mode normal puis on maximise
@@ -42,9 +41,9 @@ namespace DirectorySize
           WindowState = settings.WindowState;
         }
       }
-      
+
       LoadLastDirectory();
-      
+
       // Initialiser la référence à la barre de progression
       progressBar = (Border)FindName("ProgressBar");
     }
@@ -52,7 +51,7 @@ namespace DirectorySize
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
       base.OnClosing(e);
-      
+
       // Sauvegarder la position et la taille de la fenêtre
       if (WindowState == WindowState.Normal)
       {
@@ -69,7 +68,7 @@ namespace DirectorySize
         settings.WindowWidth = RestoreBounds.Width;
         settings.WindowHeight = RestoreBounds.Height;
       }
-      
+
       settings.WindowState = WindowState;
       settings.Save();
     }
@@ -109,13 +108,13 @@ namespace DirectorySize
       using (var dialog = new FolderBrowserDialog())
       {
         dialog.Description = "Sélectionnez le dossier à analyser";
-        
+
         // Définir le répertoire initial si disponible
         if (!string.IsNullOrEmpty(FolderPathTextBox.Text) && Directory.Exists(FolderPathTextBox.Text))
         {
           dialog.SelectedPath = FolderPathTextBox.Text;
         }
-        
+
         if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
         {
           FolderPathTextBox.Text = dialog.SelectedPath;
@@ -150,7 +149,7 @@ namespace DirectorySize
       StatusTextBlock.Text = "Analyse en cours...";
       AnalyzeButton.Content = "Annuler";
       AnalyzeButton.Visibility = Visibility.Visible;
-      
+
       worker.RunWorkerAsync(argument: path);
     }
 
@@ -201,76 +200,79 @@ namespace DirectorySize
 
     private void UpdateProgress(int percentage, string currentDirectory = null)
     {
-        if (progressBar == null) return;
+      if (progressBar == null)
+      {
+        return;
+      }
 
-        // Mettre à jour la largeur de la barre de progression
-        Dispatcher.Invoke(() =>
+      // Mettre à jour la largeur de la barre de progression
+      Dispatcher.Invoke(() =>
         {
-            // Calculer la largeur en fonction du pourcentage
-            double maxWidth = StatusBarGrid.ActualWidth;
-            double newWidth = (maxWidth * percentage) / 100.0;
-            progressBar.Width = newWidth;
+          // Calculer la largeur en fonction du pourcentage
+          double maxWidth = StatusBarGrid.ActualWidth;
+          double newWidth = (maxWidth * percentage) / 100.0;
+          progressBar.Width = newWidth;
 
-            // Mettre à jour l'opacité (plus clair au début, plus foncé à la fin)
-            double opacity = 0.2 + (0.8 * (percentage / 100.0));
-            progressBar.Opacity = opacity;
+          // Mettre à jour l'opacité (plus clair au début, plus foncé à la fin)
+          double opacity = 0.2 + (0.8 * (percentage / 100.0));
+          progressBar.Opacity = opacity;
 
-            // Mettre à jour le texte
-            string statusText = $"Analyse en cours... {percentage}%";
-            if (!string.IsNullOrEmpty(currentDirectory))
-            {
-                statusText += $" - {System.IO.Path.GetFileName(currentDirectory)}";
-            }
-            StatusTextBlock.Text = statusText;
+          // Mettre à jour le texte
+          string statusText = $"Analyse en cours... {percentage}%";
+          if (!string.IsNullOrEmpty(currentDirectory))
+          {
+            statusText += $" - {Path.GetFileName(currentDirectory)}";
+          }
+          StatusTextBlock.Text = statusText;
         });
     }
 
     private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
     {
-        var dirInfo = e.UserState as DirectoryInfoWithSize;
-        UpdateProgress(e.ProgressPercentage, dirInfo?.FullPath);
+      var dirInfo = e.UserState as DirectoryInfoWithSize;
+      UpdateProgress(e.ProgressPercentage, dirInfo?.FullPath);
     }
 
     private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
     {
-        Dispatcher.Invoke(() =>
+      Dispatcher.Invoke(() =>
+      {
+        // Réinitialiser la barre de progression
+        if (progressBar != null)
         {
-            // Réinitialiser la barre de progression
-            if (progressBar != null)
-            {
-                progressBar.Width = 0;
-            }
+          progressBar.Width = 0;
+        }
 
-            if (e.Cancelled)
-            {
-                StatusTextBlock.Text = "Analyse annulée par l'utilisateur.";
-            }
-            else if (e.Error != null)
-            {
-                StatusTextBlock.Text = $"Erreur : {e.Error.Message}";
-                System.Windows.MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur", 
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            else
-            {
-                var results = e.Result as List<DirectoryInfoWithSize>;
-                if (results != null && results.Any())
-                {
-                    ResultsListView.ItemsSource = results;
-                    long totalSize = results.Sum(d => d.Size);
-                    StatusTextBlock.Text = $"Analyse terminée - {results.Count} dossiers analysés - Taille totale : {FormatSize(totalSize)}";
-                }
-                else
-                {
-                    StatusTextBlock.Text = "Aucun dossier trouvé ou accessible.";
-                }
-            }
+        if (e.Cancelled)
+        {
+          StatusTextBlock.Text = "Analyse annulée par l'utilisateur.";
+        }
+        else if (e.Error != null)
+        {
+          StatusTextBlock.Text = $"Erreur : {e.Error.Message}";
+          System.Windows.MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        else
+        {
+          var results = e.Result as List<DirectoryInfoWithSize>;
+          if (results != null && results.Any())
+          {
+            ResultsListView.ItemsSource = results;
+            long totalSize = results.Sum(d => d.Size);
+            StatusTextBlock.Text = $"Analyse terminée - {results.Count} dossiers analysés - Taille totale : {FormatSize(totalSize)}";
+          }
+          else
+          {
+            StatusTextBlock.Text = "Aucun dossier trouvé ou accessible.";
+          }
+        }
 
-            // Toujours réactiver le bouton et le rendre visible
-            AnalyzeButton.Content = "Analyser";
-            AnalyzeButton.IsEnabled = true;
-            AnalyzeButton.Visibility = Visibility.Visible;
-        });
+        // Toujours réactiver le bouton et le rendre visible
+        AnalyzeButton.Content = "Analyser";
+        AnalyzeButton.IsEnabled = true;
+        AnalyzeButton.Visibility = Visibility.Visible;
+      });
     }
 
     private static string FormatSize(long bytes)
