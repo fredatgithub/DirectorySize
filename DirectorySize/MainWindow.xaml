@@ -49,7 +49,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Dossier" FontWeight="Bold"/>
                     <TextBlock Grid.Column="1" Text="Taille" FontWeight="Bold" TextAlignment="Right"/>
-                    <TextBlock Grid.Column="2" Text="Nb Fichiers" FontWeight="Bold" TextAlignment="Right"/>
+                    <TextBlock Grid.Column="2" Text="Nombre de Fichiers" FontWeight="Bold" TextAlignment="Right"/>
                 </Grid>
                 
                 <!-- Liste des dossiers -->
@@ -64,7 +64,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Nb Fichiers" DisplayMemberBinding="{Binding Path=FileCount, StringFormat={}{0:N0}}" Width="150">
+                            <GridViewColumn Header="Nombre de Fichiers" DisplayMemberBinding="{Binding Path=FileCount, StringFormat={}{0:N0}}" Width="150">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Path=FileCount, StringFormat={}{0:N0}}" TextAlignment="Right"/>
