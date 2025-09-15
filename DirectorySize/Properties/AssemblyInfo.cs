@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("DirectorySize")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("e-SNCF")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DirectorySize")]
-[assembly: AssemblyCopyright("Copyright © e-SNCF 2025")]
+[assembly: AssemblyCopyright("Copyright © MIT Freddy Juhel 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

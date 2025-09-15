@@ -5,17 +5,37 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
+using DirectorySize.Properties;
 
 namespace DirectorySize
 {
   public partial class MainWindow: Window
   {
     private BackgroundWorker worker;
+    private Settings settings = Settings.Default;
 
     public MainWindow()
     {
       InitializeComponent();
       InitializeBackgroundWorker();
+      LoadLastDirectory();
+    }
+
+    private void LoadLastDirectory()
+    {
+      if (!string.IsNullOrEmpty(settings.LastDirectory) && Directory.Exists(settings.LastDirectory))
+      {
+        FolderPathTextBox.Text = settings.LastDirectory;
+      }
+    }
+
+    private void SaveLastDirectory(string path)
+    {
+      if (Directory.Exists(path))
+      {
+        settings.LastDirectory = path;
+        settings.Save();
+      }
     }
 
     private void InitializeBackgroundWorker()
@@ -37,9 +57,16 @@ namespace DirectorySize
       {
         dialog.Description = "Sélectionnez le dossier à analyser";
         
+        // Définir le répertoire initial si disponible
+        if (!string.IsNullOrEmpty(FolderPathTextBox.Text) && Directory.Exists(FolderPathTextBox.Text))
+        {
+          dialog.SelectedPath = FolderPathTextBox.Text;
+        }
+        
         if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
         {
           FolderPathTextBox.Text = dialog.SelectedPath;
+          SaveLastDirectory(dialog.SelectedPath);
         }
       }
     }
@@ -54,6 +81,9 @@ namespace DirectorySize
         return;
       }
 
+      // Sauvegarder le répertoire avant de lancer l'analyse
+      SaveLastDirectory(path);
+
       if (worker.IsBusy)
       {
         worker.CancelAsync();
@@ -65,7 +95,7 @@ namespace DirectorySize
       ResultsListView.ItemsSource = null;
       StatusTextBlock.Text = "Analyse en cours...";
       AnalyzeButton.Content = "Annuler";
-
+      
       worker.RunWorkerAsync(argument: path);
     }
 
@@ -159,7 +189,7 @@ namespace DirectorySize
       AnalyzeButton.IsEnabled = true;
     }
 
-    private string FormatSize(long bytes)
+    private static string FormatSize(long bytes)
     {
       string[] sizes = { "octets", "Ko", "Mo", "Go", "To" };
       int order = 0;
@@ -168,53 +198,10 @@ namespace DirectorySize
       while (len >= 1024 && order < sizes.Length - 1)
       {
         order++;
-        len = len / 1024;
+        len /= 1024;
       }
 
       return $"{len:0.##} {sizes[order]}";
-    }
-  }
-
-  public class DirectoryInfoWithSize
-  {
-    public string Name { get; set; }
-    public long Size { get; set; }
-    public int FileCount { get; set; }
-    public string FullPath { get; set; }
-
-    public DirectoryInfoWithSize(DirectoryInfo directoryInfo)
-    {
-      Name = directoryInfo.Name;
-      FullPath = directoryInfo.FullName;
-
-      try
-      {
-        // Calculer la taille des fichiers dans le dossier courant
-        FileInfo[] files = directoryInfo.GetFiles("*", SearchOption.TopDirectoryOnly);
-        FileCount = files.Length;
-        Size = files.Sum(f => f.Length);
-
-        // Parcourir les sous-dossiers
-        foreach (var dir in directoryInfo.GetDirectories("*", SearchOption.TopDirectoryOnly))
-        {
-          try
-          {
-            var dirFiles = dir.GetFiles("*", SearchOption.AllDirectories);
-            FileCount += dirFiles.Length;
-            Size += dirFiles.Sum(f => f.Length);
-          }
-          catch (UnauthorizedAccessException)
-          {
-            // Ignorer les dossiers sans accès
-          }
-        }
-      }
-      catch (UnauthorizedAccessException)
-      {
-        // Ignorer les dossiers sans accès
-        Size = 0;
-        FileCount = 0;
-      }
     }
   }
 }
