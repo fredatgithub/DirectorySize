@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using DirectorySize.Properties;
+using MessageBox = System.Windows.MessageBox;
 
 namespace DirectorySize
 {
@@ -22,8 +23,7 @@ namespace DirectorySize
       InitializeBackgroundWorker();
 
       // Restaurer la position et la taille de la fenêtre
-      if (settings.WindowLeft >= 0 && settings.WindowTop >= 0 &&
-          settings.WindowWidth > 0 && settings.WindowHeight > 0)
+      if (settings.WindowLeft >= 0 && settings.WindowTop >= 0 && settings.WindowWidth > 0 && settings.WindowHeight > 0)
       {
         Left = settings.WindowLeft;
         Top = settings.WindowTop;
@@ -48,7 +48,7 @@ namespace DirectorySize
       progressBar = (Border)FindName("ProgressBar");
     }
 
-    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    protected override void OnClosing(CancelEventArgs e)
     {
       base.OnClosing(e);
 
@@ -129,7 +129,7 @@ namespace DirectorySize
 
       if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
       {
-        System.Windows.MessageBox.Show("Veuillez sélectionner un dossier valide.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        MessageBox.Show("Veuillez sélectionner un dossier valide.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
         return;
       }
 
@@ -223,6 +223,7 @@ namespace DirectorySize
           {
             statusText += $" - {Path.GetFileName(currentDirectory)}";
           }
+
           StatusTextBlock.Text = statusText;
         });
     }
@@ -250,12 +251,12 @@ namespace DirectorySize
         else if (e.Error != null)
         {
           StatusTextBlock.Text = $"Erreur : {e.Error.Message}";
-          System.Windows.MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur",
+          MessageBox.Show($"Une erreur est survenue : {e.Error.Message}", "Erreur",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
         else
         {
-          var results = e.Result as List<DirectoryInfoWithSize>;
+          List<DirectoryInfoWithSize> results = e.Result as List<DirectoryInfoWithSize>;
           if (results != null && results.Any())
           {
             ResultsListView.ItemsSource = results;
